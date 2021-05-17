@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang ="en">
+<meta charset="utf-8"/>	
+<body>	
+	<h1 id="title"> FCC Project 3</h1>
+	<div id="description"> USA Education by Counties</h4>
+
+	<svg id="container" style="background-color : #FAD0C9FF" height ="600" width="1000" > 
+			
+	</svg>
+	 <div id='rightSide'>
+            <div id='tooltip'>
+
+            </div>
+            <svg id='legend'>
+                <g>
+                    <rect x="10" y="0" width="40" height="40" fill="tomato"></rect>
+                    <text x="60" y="20" fill="white">Less than 15%</text>
+                </g>
+                <g>
+                    <rect x="10" y="40" width="40" height="40" fill="orange"></rect>
+                    <text x="60" y="60" fill="white">15% than 30%</text>
+                </g>
+                <g>
+                    <rect x="10" y="80" width="40" height="40" fill="lightgreen"></rect>
+                    <text x="60" y="100" fill="white">30% to 45%</text>
+                </g>
+                <g>
+                    <rect x="10" y="120" width="40" height="40" fill="limegreen"></rect>
+                    <text x="60" y="140" fill="white">More than 45%</text>
+                </g>
+            </svg>
+            <div id='description'>Percentage of adults age 25 and older with a bachelor's degree or higher (2010-2014). Source: <a href='https://www.ers.usda.gov/data-products/county-level-data-sets/download-data.aspx'>USDA Economic Research Service</a></div>
+
+        </div>
+        
+    </div>
+	
+	
+</body>
+
+<style>
+
+
+
+html, body{
+    min-height: 100%
+}
+
+body {
+    background-color: #2A2D2D;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #FDF1E7;
+    margin: none;
+}
+
+svg{
+    background-color: #305555;
+    /*box-shadow: 0px 3px 15px rgba(0,0,0,0.2); */
+    /*border-radius: 5px; */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#canvas{
+    min-height: 600px;
+    min-width: 950px;
+}
+
+
+.county:hover{
+    fill: black
+}
+
+g{
+    color: #FDF1E7
+}
+
+#tooltip{
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    margin-top: 2px;
+    color: #FDF1E7;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+#legend{
+    color: rgb(56, 58, 74);
+    font-size: 18px;
+    text-align: center;
+    min-height: 150px;
+    max-width: 180px;
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+#description a{
+    text-decoration: none;
+    color: #FDF1E7;
+    text-align: center;
+}
+
+#container{
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+#rightSide{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: 50px;
+}
+		
+
+
+</style>
+
+<script src= "https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"> </script>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js" integrity="sha256-tHoAPGoNdhIR28YHl9DWLzeRfdwigkH7OCBXMrHXhoM=" crossorigin="anonymous"></script>
+<script>
+	
+	let svg=d3.select("svg")
+	let url ="https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json"
+		
+		let data
+		let values=[]
+		//width and height of the svg same as mentioned above in svg segment.
+		let height =800
+		let width= 1600
+		let padding= 60 
+		let countyURL ="https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json"
+		let eduURL ="https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/for_user_education.json"
+		
+		
+		let cdata
+		let edudata
+		let tooltip = d3.select('#tooltip')
+		d3.json(countyURL).then(
+			(data, error)=>{
+				if (error){
+				console.log(error)
+				}else{
+				 cdata= topojson.feature(data, data.objects.counties).features
+				 console.log(cdata)
+				 d3.json(eduURL).then(
+					(data, error)=>{
+					if(error){
+					console.log(error)
+					}else{
+					edudata=data
+					console.log(edudata)
+					drawMap()
+						 }
+						}
+					)
+				}
+			}
+		)
+			
+		
+	function drawMap(data){
+	
+	
+			svg.selectAll("path")
+				.data(cdata)
+				.enter()
+				.append("path")
+				.attr("d", d3.geoPath())
+				.attr("class", "county")
+				.attr("fill", countyDataItem =>{
+					let id = countyDataItem["id"]
+					let county=edudata.find((item)=>{
+					return item["fips"]===id
+						})
+						let percentage =county["bachelorsOrHigher"]
+						if (percentage<=15){
+						return "tomato"}
+						else if (percentage<=30 ){
+						return "orange"}
+						else if (percentage <=45){
+						return "lightgreen" }
+						else{
+						return "limegreen"}
+					})
+				 .attr('data-fips', (countyDataItem) => {
+						return countyDataItem['id']
+					})
+				 .attr('data-education', (countyDataItem) => {
+						let id = countyDataItem['id']
+						let county = edudata.find((item) => {
+							return item['fips'] === id
+						})
+						let percentage = county['bachelorsOrHigher']
+						return percentage
+					})
+					.on('mouseover', (countyDataItem)=> {
+					tooltip.transition()
+						.style('visibility', 'visible')
+
+					let id = countyDataItem['id']
+					let county = edudata.find((item) => {
+						return item['fips'] === id
+					})
+
+					tooltip.text(county['fips'] + ' - ' + county['area_name'] + ', ' + 
+						county['state'] + ' : ' + county['bachelorsOrHigher'] + '%')
+
+						tooltip.attr('data-education', county['bachelorsOrHigher'] )
+					})
+					.on('mouseout', (countyDataItem) => {
+						tooltip.transition()
+							.style('visibility', 'hidden')
+					})
+
+	
+	
+}
+	
+
+</script>
+</html> 
