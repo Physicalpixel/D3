@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang ="en">
+<meta charset="utf-8"/>	
+<head>
+		
+</head>
+
+<body>	
+<!-- why do we use id for svg?-->
+	<svg id="container" style="background-color : #FAD0C9FF" height ="800" width="1600" > 
+			<!--<g id= "body" transform ="translate(70,70)"> </g> -->
+			<text id="title" x="500" y="50">FCC Project 2 </text>
+	</svg>
+</body>
+
+<style>
+	  .legend {                                                    
+        font-size: 24px; 
+		font-family: "Helvetica", sans-serif;	
+      }                                                            
+      rect {                                                       
+        stroke-width: 2;                                           
+      }  
+		body {
+			background-color: #FFFFFF;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			height: 100%;
+		}
+
+		.dot:hover{
+			fill: #00FF00;
+		}
+<!-- * here is for all, eg. here this style applies to all written items of this project-->
+		*{
+			font-family: "Helvetica", sans-serif;
+		}
+		
+<!-- hashtag refers to any id with the word following the tag-->			
+		
+		
+		#tooltip{
+			margin-top: 20px;
+			color: #000000;
+			font-size: 20px;
+		}
+		#title{
+			font-size: 30px;
+			fill: #17252A;
+			font-family: "Helvetica", sans-serif;
+					
+		}
+
+		
+
+
+</style>
+
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+	
+	let svg=d3.select("svg")
+	let url ="https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/cyclist-data.json"
+		
+		let data
+		let values=[]
+		//width and height of the svg same as mentioned above in svg segment.
+		let height =800
+		let width= 1600
+		let padding= 100 // padding for the space around the chart in tha selected area
+			//First, an instance of the XMLHttpRequest object is created and saved in the req variable. 
+			//the open method initializes a request - this is requesting data through the URL, therefore is a "GET" request.
+			//second argument for open is the URL of the API you are requesting data from.
+			//The third argument is a Boolean value where true makes it an asynchronous request.
+			// The onload event handler parses the returned data and applies the JSON.stringify method to 
+			//convert the JavaScript object into a string. This string is then inserted as the message text.
+			//JSON transmitted by APIs are sent as bytes, and your application receives it as a string. 
+			//These can be converted into JavaScript objects, but they are not JavaScript objects by default. 
+			//The JSON.parse method parses the string and constructs the JavaScript object described by it.
+		let req= new XMLHttpRequest()
+			req.open("GET",url, true )						   
+			req.onload=() => {
+			data = JSON.parse(req.responseText)
+			// Dataset for this project contains values under the key "data" . This line is populating existing "values" array with data recieved.
+			//console.log(values)				
+			showData(data) //calling show data function which will be executed once the data is loaded completely
+			}			
+			req.send()	//The send method sends the request
+			
+		
+	function showData(data){	
+			
+			//Y-AXIS	
+			let timeFormat = d3.timeFormat("%M:%S");
+			let specifier = "%M:%S";	
+			data = data.map(d=>({
+			           Time: d3.timeParse(specifier)(d.Time), 
+					   date: new Date(d.Year, 0) }))
+					   console.log(data)
+			
+			let yScale= d3.scaleTime() //Construct continuous linear scale where input data (domain) maps to specified output range(the size of the scale in actual pixels). 
+						.domain(d3.extent(data, d=>d.Time))
+						.range([(height-padding),padding]);	
+						
+
+			svg.append("g")
+				.attr("id", "y-axis")
+				.call(d3.axisLeft(yScale).tickFormat(timeFormat))
+				.attr("transform", "translate(" + (padding) + ",0)")
+			
+			//X-AXIS			
+			let xMin = new Date(d3.min(data, d=>(d.date)).getFullYear()-1, 0)
+			let xMax = d3.max(data, d=>(d.date))
+			
+			console.log(xMin, xMax)			
+												
+			let xScale=d3.scaleTime()
+						.domain([xMin, xMax])
+						.range([padding,(width-padding)])						
+						
+			svg.append("g")
+				.attr("id", "x-axis")
+				.attr("transform", "translate(0," + (height-padding) + ")")
+				.call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y")))
+
+			let tooltip = d3.select("body")
+                    .append("div")
+                    .attr("id", "tooltip")
+                    .style("visibility", "hidden")
+                    .style("width",100 )
+                    .style("height",100)
+					
+			//adding simple text as legend. When we append data to legend it is creating the content in text for each data value
+			//which is causing the text to look pixelated as it is written over and over again for each data value.
+			/*svg.append("text")
+				.attr('x', padding)
+				.attr('y', padding )
+				.text( "Hello" )
+				.style("font-size", 10)
+				.attr('alignment-baseline', 'middle')*/ 
+
+							
+			
+		
+			svg.selectAll("circle")
+				.data(data)
+				.enter()
+				.append("circle")
+				.attr("class", "dot")
+				.attr("r", 6)
+				.attr("opacity", 0.5)
+				.attr("cx", d=>xScale(d.date))
+				.attr("cy", d=>yScale(d.Time))
+				.attr("fill", "#000000")
+				.attr("data-xvalue", d=> d.date)
+				.attr("data-yvalue", d=> d.Time.toISOString())
+				.on("mouseover", (item) => {
+				
+						tooltip.transition()
+						.style("visibility", "visible")
+
+						tooltip.text("Year-"+ (item.date).getFullYear()+", Time-"+item.Time.getMinutes() +":"+item.Time.getSeconds())
+						tooltip.attr("data-year", item.date)
+						})
+				.on("mouseout", (item) => {
+						tooltip.transition()
+						.style("visibility", "hidden")
+						})  
+				.attr("id", "legend")
+			
+			
+			
+			 					
+			
+
+	
+	
+}
+	
+
+</script>
+</html> 
