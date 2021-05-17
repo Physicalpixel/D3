@@ -3,7 +3,7 @@
 
 [FCC Project Scatter Plot](https://physicalpixel.github.io/D3/FCC_Scatter_Plot.html)
 
-[FCC Project Heatmap](https://physicalpixel.github.io/D3/FCC_Heatmap.html)
+[FCC Project Heatmap](https://physicalpixel.github.io/D3/FCC_heatmap.html)
 
 [FCC Project Choropleth Map](https://physicalpixel.github.io/D3/index.html)
 
