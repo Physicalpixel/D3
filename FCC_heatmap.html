@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8"/>
+
+<body>
+	<h1 id= "title"> FCC Project 3-Heatmap</h1>
+	<h4 id= "description"> This is description</h4>
+	<svg height="600" width="1600" style="background-color: #D3D3D3"> 
+	</svg>
+	<div id='tooltip'>
+
+</div>
+	<svg id="legend">
+	<g>
+            <rect x="10" y="0" width="40" height="40" fill="Crimson"></rect>
+            <text x="60" y="20" fill="DarkSlateGray">Variance of -1 or less</text>
+        </g>
+        <g>
+            <rect x="10" y="40" width="40" height="40" fill="LightCoral"></rect>
+            <text x="60" y="60" fill="DarkSlateGray">On or Below Average</text>
+        </g>
+        <g>
+            <rect x="10" y="80" width="40" height="40" fill="SteelBlue"></rect>
+            <text x="60" y="100" fill="DarkSlateGray">Above Average</text>
+        </g>
+        <g>
+            <rect x="10" y="120" width="40" height="40" fill="MistyRose"></rect>
+            <text x="60" y="140" fill="DarkSlateGray">Variance of +1 or more</text>
+        </g>
+	</svg>
+</body>
+<style>
+		*{
+				font-family: 'Source Sans Pro', sans-serif;
+			 }
+		body {
+				background-color: #FFFFFF;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				height: 100%;
+				}
+
+		#title{
+			font-size: 30px;
+			fill: #17252A;
+			font-family: "Helvetica", sans-serif;
+					
+		}
+		#tooltip{
+			visibility: hidden;
+			height: auto;
+			width: auto;
+			margin-top: 2px;
+			color: #000000;
+			font-size: 24px;
+			margin-bottom: 5px;
+			}
+		#legend{
+			color: rgb(56, 58, 74);
+			font-size: 18px;
+			text-align: center;
+			min-height: 150px;
+			}
+		rect {                                                       
+			stroke-width: 2;                                           
+		  } 
+		  
+				.cell:hover{
+			fill: black
+		}
+</style>
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+
+
+<script>
+let url="https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json"
+let data=[]
+let data1
+let svg= d3.select("svg")
+let height=600
+let width=1600
+let padding =100
+
+let req= new XMLHttpRequest()
+	req.open("GET", url, true)
+	req.onload=()=>{
+	data= JSON.parse(req.responseText)
+	data1=(data.monthlyVariance)
+	showData(data1)
+	}
+	req.send()
+
+/*svg.attr("transform", "translate(0, 100 )")
+	.attr("transform", "translate(100, 0 )")*/
+function showData(data)
+{
+
+		let xScale=d3.scaleLinear()
+					 .domain([d3.min(data, d=>d.year), d3.max(data, d=>d.year)+1])
+					 .range([padding, width-padding])
+					 
+					 
+			svg.append("g")
+				.attr("id", "x-axis")
+				.call(d3.axisBottom(xScale).tickFormat(d3.format("d")))
+				.attr("transform", "translate(0,"+(height-padding) +")")
+				 
+		let yScale=d3.scaleTime()
+					.domain([new Date(0,0,0,0,0,0,0), new Date(0,12,0,0,0,0,0)])
+					.range([padding, height-padding])
+
+			svg.append("g")
+				.attr("id", "y-axis") 
+				.call(d3.axisLeft(yScale).tickFormat(d3.timeFormat("%B")))
+				.attr("transform", "translate(" + padding + ",0)")
+				
+				
+				
+		
+		let tooltip = d3.select("#tooltip")
+						.style("color", "white")
+						.style("position", "absolute")
+						.style("visibility", "hidden")
+						.style("background-color", "black")
+						.style("border", "solid")
+						.style("border-width", "2px")
+						.style("border-radius", "5px")
+						.style("padding", "5px")
+						
+
+
+		let minYear= d3.min(data, d=>d.year)
+		let maxYear= d3.max(data, d=>d.year)
+		let rectWidth= (width-2*padding)/(maxYear-minYear)
+		//console.log(rectWidth)
+
+		svg.selectAll("rect")
+			.data(data)
+			.enter()
+			.append("rect")
+			.attr("class", "cell")
+			.attr("data-month", d=>d.month-1 )
+			.attr("data-year",d=>d.year)
+			.attr("data-temp",d=>d.variance )
+			.attr("x", d=>xScale(d.year))
+			.attr("y", d=> yScale(new Date(0, (d.month -1), 0, 0, 0, 0, 0)))
+			.attr("width", rectWidth)
+			.attr("height", (height-2*padding)/12)
+			.attr("fill", d=>
+			{ if (d.variance<= -1){
+					return "Crimson"
+					}	
+			  else if (d.variance<=0){
+					return "LightCoral"
+					}
+			  else if (d.variance<=1){
+				   return "SteelBlue"
+				   }
+			  else{
+				  return "MistyRose"
+				  }
+			})
+			.attr("id", "legend")
+			.on("mouseover", function(){return tooltip.style("visibility", "visible");})
+			.on('mouseover', (item) => {
+						tooltip.transition()
+							.style('visibility', 'visible')
+						
+						let monthNames = ["January", "February", "March", "April", "May", "June",
+						"July", "August", "September", "October", "November", "December"
+						]
+					
+						tooltip.text(item['year'] + ' ' + monthNames[item['month'] -1 ] + ' : ' + item['variance'])
+
+						tooltip.attr('data-year', item['year'])
+						tooltip.style("top", (event.pageY)+"px").style("left",(event.pageX)+"px")
+							})
+			
+			.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+}
+	
+
+
+</script>
+</html>
