@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang ="en">
+<meta charset="utf-8"/>	
+<head>
+		
+</head>
+
+<body>	
+<!-- why do we use id for svg?-->
+	<svg id="container" style="background-color : #FAD0C9FF" height ="800" width="1600" > 
+			<!--<g id= "body" transform ="translate(70,70)"> </g> -->
+			<text id="title" x="500" y="50">FCC Project 1 </text>
+	</svg>
+</body>
+
+<style>
+
+		body {
+			background-color: #FFFFFF;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			height: 100%;
+		}
+
+		.bar:hover{
+			fill: #FAD0C9FF;
+		}
+<!-- * here is for all, eg. here this style applies to all written items of this project-->
+		*{
+			font-family: "Helvetica", sans-serif;
+		}
+		.bar{
+			background-color: #6E6E6DFF;
+			border-color: #6E6E6DFF;
+			fill: #6E6E6DFF;
+		}	
+<!-- hashtag refers to any id with the word following the tag-->			
+		
+		
+		#tooltip{
+			margin-top: 20px;
+			color: #000000;
+			font-size: 20px;
+		}
+		#title{
+			font-size: 30px;
+			fill: #17252A;
+			font-family: "Helvetica", sans-serif;
+			
+			
+		}
+
+		
+
+
+</style>
+
+<script src= "https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"> </script>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+	
+	let svg=d3.select("svg")
+	let url ="https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json"
+		
+		let data
+		let values=[]
+		//width and height of the svg same as mentioned above in svg segment.
+		let height =800
+		let width= 1600
+		let padding= 60 // padding for the space around the chart in tha selected area
+			//First, an instance of the XMLHttpRequest object is created and saved in the req variable. 
+			//the open method initializes a request - this is requesting data through the URL, therefore is a "GET" request.
+			//second argument for open is the URL of the API you are requesting data from.
+			//The third argument is a Boolean value where true makes it an asynchronous request.
+			// The onload event handler parses the returned data and applies the JSON.stringify method to 
+			//convert the JavaScript object into a string. This string is then inserted as the message text.
+			//JSON transmitted by APIs are sent as bytes, and your application receives it as a string. 
+			//These can be converted into JavaScript objects, but they are not JavaScript objects by default. 
+			//The JSON.parse method parses the string and constructs the JavaScript object described by it.
+		let req= new XMLHttpRequest()
+			req.open("GET",url, true )						   
+			req.onload=() => {
+			data = JSON.parse(req.responseText)
+			values =data.data // Dataset for this project contains values under the key "data" . This line is populating existing "values" array with data recieved.
+			//console.log(values)				
+			showData() //calling show data function which will be executed once the data is loaded completely
+			}			
+			req.send()	//The send method sends the request
+			
+		
+	function showData(data){			
+			
+			let maxValue= d3.max(values, d=> { 
+					return d[1]})
+					//console.log(maxValue)
+			let yScale= d3.scaleLinear() //Construct continuous linear scale where input data (domain) maps to specified output range(the size of the scale in actual pixels). 
+						.domain([0,maxValue])
+						.range([(height-padding),padding]);		
+
+						svg.append("g")
+						.attr("id", "y-axis")
+						.call(d3.axisLeft(yScale))
+						.attr("transform", "translate(" + (padding) + ",0)")
+			
+			
+			let date = values.map (d=>{
+						return new Date(d[0])
+						})				
+			
+			let xScale=d3.scaleTime()
+						.domain(d3.extent(date))
+						.range([padding,(width-padding)])
+						
+						svg.append("g")
+							.attr("id", "x-axis")
+							.attr("transform", "translate(0," + (height-padding) + ")")
+							.call(d3.axisBottom(xScale))							
+
+							
+			let widthScale= d3.scaleLinear()
+							.domain([0, values.length-1])
+							.range([padding,(width-padding)])
+							
+			let heightScale= d3.scaleLinear()
+						.domain([0,maxValue])
+						.range([0,(height-2*padding)]);	
+						
+			let tooltip = d3.select('body')
+                    .append('div')
+                    .attr('id', 'tooltip')
+                    .style('visibility', 'hidden')
+                    .style('width',100 )
+                    .style('height',100)
+			 					
+					
+				svg.selectAll("rect")
+					.data(values)
+					.enter()
+					.append("rect")					
+					.attr("class", "bar")
+					.attr("data-date", (item) => {
+							return item[0]
+							})
+					.attr("data-gdp", (item) => {
+							return item[1]
+							})
+					.attr("width", 4)
+					.attr("height", d=>{
+							return heightScale(d[1])
+							})
+					.attr("x", (d, i)=>{					
+							return widthScale(i)							
+							})
+					.attr("y", d=>{
+							//console.log(heightScale(d[1]))
+							return yScale(d[1])
+							})
+							
+					 .on("mouseover", (item) => {
+							tooltip.transition()
+							.style("visibility", "visible")
+
+							tooltip.text(item[0]+", GDP-"+item[1])
+
+							//document.querySelector("#tooltip").setAttribute("data-gdp", item[0]) //????
+							})
+					.on("mouseout", (item) => {
+							tooltip.transition()
+							.style("visibility", "hidden")
+							})        
+
+	
+	
+}
+	
+
+</script>
+</html> 
