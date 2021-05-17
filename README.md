@@ -5,5 +5,5 @@
 
 [FCC Project Heatmap](https://physicalpixel.github.io/D3/FCC_heatmap.html)
 
-[FCC Project Choropleth Map](https://physicalpixel.github.io/D3/index.html)
+[FCC Project Choropleth Map](https://physicalpixel.github.io/D3/FCC_Choropleth.html)
 
