@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8" />
+
+<head>
+
+</head>
+
+<body>
+
+    <svg id="container"></svg>
+
+</body>
+
+
+<style>
+    .axis line,
+    .axis circle {
+        fill: none;
+        stroke: steelblue;
+        stroke-dasharray: 4;
+    }
+    
+    #tooltip {
+        margin-top: 20px;
+        color: #000000;
+        font-size: 40px;
+    }
+</style>
+
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+    var width = 500,
+        height = 500,
+        radius = 120
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        //.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+
+    svg.append('circle')
+        .attr("cx", width / 2)
+        .attr("cy", height / 2)
+        .attr("r", radius)
+        .attr("fill", "pink")
+
+    svg.append('path')
+        .attr("d", function getPathData() {
+            // adjust the radius a little so our text's baseline isn't sitting directly on the circle
+            var r = radius * 1.2;
+            //radius needs to be mapped to the radius of each bubble.
+            //startX=cx-r. So the coordinates of the bubbles needs to be mapped here.
+            //how to convert polar coordinates to cartesian coordinates or how to use polar coordinates
+            //for cx and cy
+            //StartY =cy
+            var startY = height / 2
+            var startX = width / 2 - r;
+
+            return 'm' + startX + ',' + startY + '' +
+                'a' + r + ',' + r + ' 0 1 1 ' + (2 * r) + ',0';
+            //visit this site (  https://www.visualcinnamon.com/2015/09/placing-text-on-arcs/ )
+            //to understand large arc flar and sweep flag to change the orientation of the text
+            //its basically the 0 0 1 value in the M coordinate
+            //format of Arc path 
+            // M start-x, start-y A radius-x, radius-y, x-axis-rotation,large-arc-flag, sweep-flag, end-x, end-y
+        })
+
+
+    .attr("id", "wavyy")
+        .style("fill", "none")
+        .style("stroke", "none")
+
+    svg.append("text")
+        .append("textPath") //append a textPath to the text element
+        //xlink:href is a link to reference, here #wavyy is the id to the path that is too be linked to text
+        .attr("xlink:href", "#wavyy") //place the ID of the path here
+        .style("text-anchor", "middle") //place the text halfway on the arc
+        .attr("startOffset", "40%")
+        .text("Yay, my text is on a wavy path");
+</script>
+
+</html>
