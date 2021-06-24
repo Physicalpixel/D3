@@ -7,4 +7,4 @@
 
 [FCC Project Choropleth Map](https://physicalpixel.github.io/D3/FCC_Choropleth.html)
 
-[Curved Text Over Circle](https://physicalpixel.github.io/D3/curved_text.html)
+[Curved Text Over Circle](https://physicalpixel.github.io/D3/Curved_Text_Path.html)
