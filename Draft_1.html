@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Aldrich|Arima+Madurai|Arvo|Henny+Penny|Indie+Flower|Libre+Baskerville|Pirata+One|Poiret+One|Sancreek|Satisfy|Share+Tech+Mono|Smokum|Snowburst+One|Special+Elite" rel="stylesheet">
+
+<body></body>
+
+
+<style>
+    .axis line,
+    .axis circle {
+        fill: none;
+        stroke: steelblue;
+        stroke-dasharray: 4;
+    }
+    
+    #tooltip {
+        margin-top: 20px;
+        color: #000000;
+        font-size: 14px;
+    }
+</style>
+
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3-collection.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+
+<script>
+    var width = 1000,
+        height = 1000,
+        radius = Math.min(width, height) / 2.5;
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + 200)
+        .attr("height", height + 200)
+        .append("g")
+        .attr("transform", "translate(600, 700) rotate(0)")
+
+    //RECTANGLE BG=======================
+
+    var rect = svg.append("g") // grey background to the vis
+
+    rect.append("rect").attr("width", (width * 2))
+        .attr("height", height * 2)
+        .attr("x", 0 - width)
+        .attr("y", 0 - height)
+        .attr("fill", "Lightgrey")
+
+    var title = rect.append("image")
+        .attr("xlink:href", function() {
+            return "http://localhost:8080/CRI/Title.png"
+        })
+        .attr("x", 0 - 600)
+        .attr("y", 0 - 970)
+        .attr("width", 350)
+        .attr("height", 850)
+
+    rect.append("text")
+        .text("2021")
+        .attr("x", 0 - 50)
+        .attr("y", -450)
+        .attr("font-size", 30)
+
+    // to load multiple data files via with promise
+
+    var promises = [
+        d3.csv("CRI_2021.csv"),
+        d3.csv("CRI_2006.csv")
+    ]
+    Promise.all(promises).then(ready)
+
+    function ready([data_2021, data_2006]) {
+
+
+        var outer_large = svg.append("g")
+            .append("circle")
+            .attr("fill", "white")
+            .attr("r", 320)
+            .attr("cx", 0)
+            .attr("cy", 0)
+            //.style("stroke", "gray")
+
+
+        var arcData = [{
+            startAngle: 0 * Math.PI / 180,
+            endAngle: 90 * Math.PI / 180
+        }, {
+            startAngle: 90 * Math.PI / 180,
+            endAngle: 180 * Math.PI / 180
+        }, {
+            startAngle: 180 * Math.PI / 180,
+            endAngle: 270 * Math.PI / 180
+        }, {
+            startAngle: 270 * Math.PI / 180,
+            endAngle: 360 * Math.PI / 180
+        }];
+        var arcGenerator = d3.arc()
+            .innerRadius(0)
+            .outerRadius(100)
+            //.padAngle(.05)
+            //.padRadius(100)
+            //.cornerRadius(5);
+
+        var outer_arc = svg.append('g')
+
+        var arc_center = outer_arc
+            .selectAll('path')
+            .data(arcData)
+            .join('path')
+            //The d attribute defines a path to be drawn. 
+            //A path definition is a list of path commands where 
+            //each command is composed of a command letter and 
+            //numbers that represent the command parameters.
+            .attr('d', arcGenerator)
+            .attr("fill", "darkgrey")
+            .attr("stroke", "white")
+            .attr("stroke-weight", 1)
+            //.style("opacity", 0.4)
+
+        var outer_large = svg.append("g")
+            .append("circle")
+            .attr("fill", "none")
+            .attr("r", 101)
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .style("stroke", "white")
+            .style("stroke-width", 15)
+
+
+        //============LABELS-income group==================//
+        var label = [{
+            text: "L",
+            x: -40,
+            y: -30
+        }, {
+            text: "H",
+            x: 40,
+            y: -30
+        }, {
+            text: "LM",
+            x: -40,
+            y: 40
+        }, {
+            text: "UM",
+            x: 40,
+            y: 40
+        }]
+
+        console.log(label[0]['text'], label[0]['x'], label[0]['y'])
+        label.map((d) => {
+            console.log(d["text"], d["x"], d["y"])
+        })
+
+
+        //appending lebls of income group to the arc, 
+        //with map called label for title and dx dy created for the same
+        outer_arc
+            .selectAll("text")
+            .data(label)
+            .enter()
+            .append("text")
+            .text(d => d["text"])
+            .attr('fill', 'black')
+            .attr('font-size', 17)
+            .attr("text-anchor", "middle")
+            // .attr("stroke", "white")
+            .attr("dx", d => d["x"])
+            .attr("dy", d => d["y"])
+            .attr("stroke-width", 4)
+
+        var color = d3.scaleOrdinal()
+            .domain(["H", "UM", "LM", "L"])
+            //.range(["#0d0887", "#7e03a8", "#cc4778", "#f89540", "#f0f921"])
+            .range([" #2F9599 ", "#7e03a8", "#cc4778", "#f89540"])
+
+        var innerRadius = 100
+        var outerRadius = 300
+        var y = d3.scaleLinear()
+            .domain([125, 1])
+            .range([innerRadius, outerRadius]) // Domain will be define later.
+
+        let tooltip = d3.select('body')
+            .append('div')
+            .attr('id', 'tooltip')
+            .style("position", "absolute")
+            .style('visibility', 'hidden')
+            .style('width', 100)
+            .style('height', 100)
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "1px")
+            .style("border-radius", "5px")
+            .style("padding", "10px")
+
+
+
+
+        var dashed_lines = svg.append("g")
+            .selectAll("path")
+            .data(data_2021)
+            .enter()
+            .append("path")
+            .attr("fill", "none")
+            .attr("d", d3.arc() // imagine your doing a part of a donut plot
+                .innerRadius(innerRadius)
+                .outerRadius(320)
+                .startAngle(function(d) {
+                    //console.log(d.Start_angle)
+                    return ((parseFloat(d.Start_angle)) * (Math.PI / 180)) + 0.012;
+                })
+                .endAngle(function(d) {
+                    return ((parseFloat(d.Start_angle)) * (Math.PI / 180)) + 0.014;
+                }))
+            .style("opacity", 0.5)
+            .style("stroke", "black")
+            .style("stroke-dasharray", ("1,6"))
+
+
+
+
+        svg.append("g")
+            .selectAll("path")
+            .data(data_2021)
+            .enter()
+            .append("path")
+            .attr("fill", d => color(d.Income_Group))
+            .attr("d", d3.arc() // imagine your doing a part of a donut plot
+                .innerRadius(innerRadius)
+                .cornerRadius(2)
+                .outerRadius(function(d) {
+                    return y(parseFloat(d.CRI_2021));
+                })
+                .startAngle(function(d) {
+                    //console.log(d.Start_angle)
+                    return (parseFloat(d.Start_angle)) * (Math.PI / 180);
+                })
+                .endAngle(function(d) {
+                    return (parseFloat(d.End_angle)) * (Math.PI / 180);
+                }))
+            //.padAngle(0.01)
+            //.padRadius(innerRadius))
+            .on("mouseover", (d) => {
+                tooltip.transition()
+                    .style("visibility", "visible")
+
+                tooltip.text(d.Country + "," + d.Income_Group + "," + d.CRI_2021)
+            })
+            .on("mousemove", function() {
+                //positioning the tooltip near the bubble 
+                return tooltip.style("top", (event.pageY - 2) + "px").style("left", (event.pageX - 2) + "px");
+            })
+            .on("mouseout", (item) => {
+                tooltip.transition()
+                    .style("visibility", "hidden")
+            })
+            .style("stroke", "white")
+
+        var critiical_lines = svg.append("g")
+            .selectAll("path")
+            .data(data_2021)
+            .enter()
+            .append("path")
+            .attr("fill", "black")
+            .attr("d", d3.arc() // imagine your doing a part of a donut plot
+                .innerRadius(innerRadius + 120)
+                .outerRadius(function(d) {
+                    return y(parseFloat(d.CRI_2021));
+                })
+                .startAngle(function(d) {
+                    //console.log(d.Start_angle)
+                    return ((parseFloat(d.C_Start_angle)) * (Math.PI / 180));
+                })
+                .endAngle(function(d) {
+                    return ((parseFloat(d.C_End_angle)) * (Math.PI / 180));
+                }))
+            .style("opacity", 0.8)
+            .style("stroke", "white")
+
+
+
+
+        //Country Labels=======================
+        /* var line = d3.radialLine()
+             .angle(function(d) {
+                 return (d.Start_angle) * Math.PI / 180
+             })
+             .radius(320)*/
+
+        var nodes = svg.append("g")
+            .selectAll("g")
+            .data(data_2021)
+            .enter()
+            .append("g")
+            .attr('fill', 'black')
+            .attr('font-size', 9)
+            .attr("font-family", function(d, i) {
+                return i < 5 ? "Arvo" : "Arvo";
+            })
+            .attr("text-anchor", function(d) {
+                //console.log(d.Start_angle)
+                var angle = d.Start_angle * Math.PI / 180
+                return (d.Start_angle) % (360) < 180 ? "start" : "end";
+            })
+            .attr("transform", function(d) {
+                // console.log(y(d.CRI_2021))
+                var angle = d.Start_angle * Math.PI / 180
+                return "rotate(" + (d.Mid - 90) + ")" + "translate(" + (outerRadius + 20) + ",0)";
+            })
+            .append("text")
+            .text(d => d.Country.trim())
+            .attr("transform", function(d) {
+                var angle = d.Start_angle * Math.PI / 180
+                return (angle + Math.PI) % (2 * Math.PI) < Math.PI ? "rotate(180)" : "rotate(0)";
+            })
+            .attr("alignment-baseline", "middle")
+
+
+
+        ////======================///////////////////==========================================
+        /////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////
+
+        width2 = 1200
+        var svg2 = d3.select("body").append("svg")
+            .attr("width", width2)
+            .attr("height", height + 200)
+            .append("g")
+            .attr("transform", "translate(600,700) rotate(0)")
+        var rect = svg2.append("g")
+        rect.append("rect").attr("width", (width2) * 2)
+            .attr("height", height * 2)
+            .attr("x", 0 - width2)
+            .attr("y", 0 - height)
+            .attr("fill", "Lightgrey")
+        rect.append("text")
+            .text("2006")
+            .attr("x", 0 - 50)
+            .attr("y", -450)
+            .attr("font-size", 30)
+
+        var set = 150
+
+        var outer_large = svg2.append("g")
+            .append("circle")
+            .attr("fill", "white")
+            .attr("r", 320)
+            .attr("cx", 0)
+            .attr("cy", 0)
+            //.style("stroke", "gray")
+
+
+        var arcData = [{
+            startAngle: 0 * Math.PI / 180,
+            endAngle: 90 * Math.PI / 180
+        }, {
+            startAngle: 90 * Math.PI / 180,
+            endAngle: 180 * Math.PI / 180
+        }, {
+            startAngle: 180 * Math.PI / 180,
+            endAngle: 270 * Math.PI / 180
+        }, {
+            startAngle: 270 * Math.PI / 180,
+            endAngle: 360 * Math.PI / 180
+        }];
+        var arcGenerator = d3.arc()
+            .innerRadius(0)
+            .outerRadius(100)
+            //.padAngle(.05)
+            //.padRadius(100)
+            //.cornerRadius(5);
+
+        var outer_arc = svg2.append('g')
+
+        var arc_center = outer_arc
+            .selectAll('path')
+            .data(arcData)
+            .join('path')
+            //The d attribute defines a path to be drawn. 
+            //A path definition is a list of path commands where 
+            //each command is composed of a command letter and 
+            //numbers that represent the command parameters.
+            .attr('d', arcGenerator)
+            .attr("fill", "darkgrey")
+            .attr("stroke", "white")
+            .attr("stroke-weight", 1)
+
+        //.style("opacity", 0.4)
+
+        var outer_large = svg2.append("g")
+            .append("circle")
+            .attr("fill", "none")
+            .attr("r", 101)
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .style("stroke", "white")
+            .style("stroke-width", 15)
+
+
+        //============LABELS-income group==================//
+        var label = [{
+            text: "L",
+            x: -50,
+            y: -30
+        }, {
+            text: "H",
+            x: 50,
+            y: -30
+        }, {
+            text: "LM",
+            x: -50,
+
+
+            y: 40
+        }, {
+            text: "UM",
+            x: 50,
+            y: 40
+        }]
+
+        /*console.log(label[0]['text'], label[0]['x'], label[0]['y'])
+        label.map((d) => {
+            console.log(d["text"], d["x"], d["y"])
+        })*/
+
+
+        //appending lebls of income group to the arc, 
+        //with map called label for title and dx dy created for the same
+        outer_arc
+            .selectAll("text")
+            .data(label)
+            .enter()
+            .append("text")
+            .text(d => d["text"])
+            .attr('fill', 'black')
+            .attr('font-size', 17)
+            .attr("text-anchor", "middle")
+            // .attr("stroke", "white")
+            .attr("dx", d => d["x"])
+            .attr("dy", d => d["y"])
+            .attr("stroke-width", 4)
+
+        var color = d3.scaleOrdinal()
+            .domain(["H", "UM", "LM", "L"])
+            .range([" #2F9599 ", "#7e03a8", "#cc4778", "#f89540"])
+
+        var innerRadius = 100
+        var outerRadius = 300
+        var y = d3.scaleLinear()
+            .domain([0, 118])
+            .range([innerRadius, outerRadius]) // Domain will be define later.
+
+        let tooltip2 = d3.select('body')
+            .append('div')
+            .attr('id', 'tooltip')
+            .style("position", "absolute")
+            .style('visibility', 'hidden')
+            .style('width', 100)
+            .style('height', 100)
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "1px")
+            .style("border-radius", "5px")
+            .style("padding", "10px")
+
+        var y2 = d3.scaleLinear()
+            .domain([120, 1])
+            .range([innerRadius, outerRadius])
+
+
+        var dashed_lines2 = svg2.append("g")
+            .selectAll("path")
+            .data(data_2006)
+            .enter()
+            .append("path")
+            .attr("fill", "none")
+            .attr("d", d3.arc() // imagine your doing a part of a donut plot
+                .innerRadius(innerRadius)
+                .outerRadius(function(d) {
+                    return (y2(parseFloat(d.CRI_2006))) + (320 - y2(parseFloat(d.CRI_2006)))
+                })
+                .startAngle(function(d) {
+                    //console.log(d.Start_angle)
+                    return ((parseFloat(d.Start_angle)) * (Math.PI / 180)) + 0.012
+                })
+                .endAngle(function(d) {
+                    return ((parseFloat(d.Start_angle)) * (Math.PI / 180)) + 0.014
+                }))
+            .style("opacity", 0.5)
+            .style("stroke", "black")
+            .style("stroke-dasharray", ("1,6"))
+
+        svg2.append("g")
+            .selectAll("path")
+            .data(data_2006)
+            .enter()
+            .append("path")
+            .attr("fill", d => color(d.Income_Group))
+            .attr("d", d3.arc() // imagine your doing a part of a donut plot
+                .innerRadius(innerRadius)
+                .cornerRadius(2)
+                .outerRadius(function(d) {
+                    return y2(parseFloat(d.CRI_2006));
+                })
+                .startAngle(function(d) {
+                    //console.log(d.Start_angle)
+                    return (parseFloat(d.Start_angle)) * (Math.PI / 180);
+                })
+                .endAngle(function(d) {
+                    return (parseFloat(d.End_angle)) * (Math.PI / 180);
+                }))
+            //.padAngle(0.01)
+            //.padRadius(innerRadius))
+            .on("mouseover", (d) => {
+                tooltip2.transition()
+                    .style("visibility", "visible")
+
+                tooltip2.text(d.Country2 + "," + d.Income_Group + "," + d.CRI_2006)
+            })
+            .on("mousemove", function() {
+                //positioning the tooltip near the bubble 
+                return tooltip2.style("top", (event.pageY - 2) + "px").style("left", (event.pageX - 2) + "px");
+            })
+            .on("mouseout", (item) => {
+                tooltip2.transition()
+                    .style("visibility", "hidden")
+            })
+            .style("stroke", "white")
+
+
+
+
+
+
+        //Country Labels=======================
+        /* var line = d3.radialLine()
+             .angle(function(d) {
+                 return (d.Start_angle) * Math.PI / 180
+             })
+             .radius(320)*/
+
+        var nodes = svg2.append("g")
+            .selectAll("g")
+            .data(data_2006)
+            .enter()
+            .append("g")
+            .attr('fill', 'black')
+            .attr('font-size', 9)
+            .attr("font-family", function(d, i) {
+                return i < 5 ? "Arvo" : "Libre Baskerville";
+            })
+            .attr("text-anchor", function(d) {
+                //console.log(d.Start_angle)
+                var angle = d.Start_angle * Math.PI / 180
+                return (d.Start_angle) % (360) < 180 ? "start" : "end";
+            })
+            .attr("transform", function(d) {
+                // console.log(y(d.CRI_2021))
+                var angle = d.Start_angle * Math.PI / 180
+                return "rotate(" + (d.Mid - 90) + ")" + "translate(" + (outerRadius + 20) + ",0)";
+            })
+            .append("text")
+            .text(d => d.Country.trim())
+            .attr("transform", function(d) {
+                var angle = d.Start_angle * Math.PI / 180
+                return (angle + Math.PI) % (2 * Math.PI) < Math.PI ? "rotate(180)" : "rotate(0)";
+            })
+            .attr("alignment-baseline", "middle")
+
+
+
+
+    }
+</script>
+
+</html>
