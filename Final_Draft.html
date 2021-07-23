@@ -57,9 +57,9 @@
     // to load multiple data files via with promise
 
     var promises = [
-        d3.csv("100companies_sorted.csv"),
-        d3.csv("Country_processed3.csv"),
-        d3.csv("Country_Perc.csv")
+        d3.csv("https://raw.githubusercontent.com/Physicalpixel/D3/main/Data/100companies_sorted.csv"),
+        d3.csv("https://raw.githubusercontent.com/Physicalpixel/D3/main/Data/Country_processed3.csv"),
+        d3.csv("https://raw.githubusercontent.com/Physicalpixel/D3/main/Data/Country_Perc.csv")
     ]
     Promise.all(promises).then(ready)
 
