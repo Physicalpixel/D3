@@ -1,6 +1,8 @@
 # D3 Projects
 [Top Emitting Companies](https://physicalpixel.github.io/D3/Final_Draft.html)
 
+[California Wildfire](https://physicalpixel.github.io/D3/california2.gif)
+
 [Climate Risk Index](https://physicalpixel.github.io/D3/CRI.html)
 
 [FCC Project Bar Chart](https://physicalpixel.github.io/D3/FCC_Bar_chart.html)
