@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Aldrich|Arima+Madurai|Arvo|Henny+Penny|Indie+Flower|Libre+Baskerville|Pirata+One|Poiret+One|Sancreek|Satisfy|Share+Tech+Mono|Smokum|Snowburst+One|Special+Elite" rel="stylesheet">
+
+<body></body>
+
+
+<style>
+    .axis line,
+    .axis circle {
+        fill: none;
+        stroke: steelblue;
+        stroke-dasharray: 4;
+    }
+    
+    #tooltip {
+        margin-top: 20px;
+        color: #000000;
+        font-size: 14px;
+    }
+</style>
+
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3-collection.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+
+<script>
+    var width = 1000,
+        height = 1000,
+        radius = Math.min(width, height) / 2.5;
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + 200)
+        .attr("height", height + 200)
+        .append("g")
+        .attr("transform", "translate(550, 550) rotate(0)")
+
+    var svg2 = d3.select("body").append("svg") // this is created for legend 
+        .attr("width", width / 3)
+        .attr("height", height + 200)
+        .append("g")
+
+    //RECTANGLE BG=======================
+
+    var rect = svg.append("rect") // grey background to the vis
+
+    .attr("width", (width) * 2)
+        .attr("height", height * 2)
+        .attr("x", 0 - width)
+        .attr("y", 0 - height)
+        .attr("fill", "Lightgrey")
+
+    // to load multiple data files via with promise
+
+    var promises = [
+        d3.csv("100companies_sorted.csv"),
+        d3.csv("Country_processed3.csv"),
+        d3.csv("Country_Perc.csv")
+    ]
+    Promise.all(promises).then(ready)
+
+    function ready([company, country, perc]) {
+
+        var maxPerc = 70 //here 70 being the total percentage
+
+        //RADIUS MAPPING=======================
+
+        var r = d3.scaleLinear()
+            .domain([0, maxPerc + 10])
+            .range([100, radius]);
+
+        //circle in center for aesthetics with no fill
+        var center = svg.append("g")
+        var center_circle = center
+            .append("circle")
+            .attr("fill", "none")
+            .attr("r", 150)
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .style("stroke", "gray")
+
+        //image of smoke in the center
+
+        var smoke = center.append("image")
+            .attr("xlink:href", function() {
+                return "http://localhost:8888/Test/smoke-edit.png"
+            })
+            .attr("x", 0 - 550)
+            .attr("y", 0 - 700)
+            .attr("width", 1500)
+            .attr("height", 1500)
+            .style("opacity", 0.5)
+
+        //title in the center
+        var title = center.append("image")
+            .attr("xlink:href", function() {
+                return "https://user-images.githubusercontent.com/33539074/123994848-6a5db480-d9eb-11eb-829c-d71d43f8c4f3.png"
+                    //"http://localhost:8888/Test/title_White.png"
+            })
+            .attr("x", 0 - 510)
+            .attr("y", 0 - 450)
+            .attr("width", 850)
+            .attr("height", 850)
+
+        //sectors legend on right side bottom
+        var sector = center.append("image")
+            .attr("xlink:href", function() {
+                return "http://localhost:8888/Test/sector.png"
+            })
+            .attr("x", 50)
+            .attr("y", 50)
+            .attr("width", 850)
+            .attr("height", 850)
+
+
+        //the ring around the chart outside- smaller  part which is of less opacity -faded  grey
+        //array of map with start and end angle for arc creation
+        var arcData = [{
+            startAngle: 252 * Math.PI / 180,
+            endAngle: 360 * Math.PI / 180
+        }];
+        var arcGenerator = d3.arc()
+            .innerRadius(462)
+            .outerRadius(490)
+            .padAngle(.02)
+            .padRadius(100)
+            //.cornerRadius(10);
+
+        var outer_arc = svg.append('g')
+            .selectAll('path')
+            .data(arcData)
+            .join('path')
+            //The d attribute defines a path to be drawn. 
+            //A path definition is a list of path commands where 
+            //each command is composed of a command letter and 
+            //numbers that represent the command parameters.
+            .attr('d', arcGenerator)
+            .attr("fill", "darkgrey")
+            //.attr("stroke", "darkgrey")
+            .attr("stroke-weight", 0.5)
+            .style("opacity", 0.4)
+            //.attr("stroke-width", 6)
+
+        //the ring around the chart outside- larger part-darker grey
+        var arcData = [{
+            startAngle: 0 * Math.PI / 180,
+            endAngle: 252 * Math.PI / 180
+        }];
+        var arcGenerator = d3.arc()
+            .innerRadius(462)
+            .outerRadius(490)
+            .padAngle(.02)
+            .padRadius(100)
+            //.cornerRadius(10);
+
+        var outer_arc = svg.append('g')
+            .selectAll('path')
+            .data(arcData)
+            .join('path')
+            .attr('d', arcGenerator)
+            .attr("fill", "DimGrey")
+            .attr("stroke", "DimGrey")
+            .attr("stroke-weight", 0.5)
+            // .style("opacity", 0.5)
+            //.attr("stroke-width", 6)
+
+
+        //the major 70 percent white donut arc on which all the bubbles are drawn
+        var arcData = [{
+            startAngle: 0 * Math.PI / 180,
+            endAngle: 252 * Math.PI / 180
+        }];
+        var arcGenerator = d3.arc()
+            .innerRadius(177)
+            .outerRadius(radius + 45)
+            .padAngle(.02)
+            .padRadius(100)
+            .cornerRadius(10);
+
+        svg.append('g')
+            .selectAll('path')
+            .data(arcData)
+            .join('path')
+            .attr('d', arcGenerator)
+            .attr("fill", "white")
+            //.attr("stroke", "grey")
+
+        // all the dotted circles in BG
+        var BGcircles = svg.append("g")
+            //r axis is being picked from the style list above, it mentions zero fill and dashed lines of circles
+            .attr("class", "r axis")
+            .selectAll("g")
+            .data(r.ticks(maxPerc / 8).slice(1))
+            .enter().append("g");
+
+        BGcircles.append("circle")
+            .attr("r", r)
+            .style("opacity", 0.3)
+
+        //color scale for all the bubbles
+        //ordinal scale gives one value each from the range to the value to be mapped in the domain.
+        //if the number of values in domain is more than the values in range, then range start from 
+        //beginning again. 
+        //for example to map [1,2,3] to ["red", "white"]--once 1 and 2 get its value red and white
+        //it starts from the beginning for 3 and gets "red"
+        //its a one to one mapping
+        var color = d3.scaleOrdinal()
+            .domain([0, maxPerc])
+            .range(["#D03454", "#9C2162", "#772F67", "#2F9599 ", "#622569 ", "#365c8d"])
+
+        //mapping of 0 to highest percentage of comapny to value to be used for radius of each bubble so that it varies by the size of percentage. Lesser the percentage, smaller the bubble
+        //mapping for the radius of the bubbles to percentage of each company
+        var size = d3.scaleSqrt()
+            .domain([0, 14.32])
+            .range([2, 60])
+
+        //these arrays hold ranges of percentage values.
+        //every array will be mapped to whole range of continent-total angle 
+        //range so that the bubbles are evenly disrtibuted.
+        //for aesthetics purpose  and to uniformly spread the bubbles in the angle range
+        //and to avoid overlaps
+        var sub_arr1 = []
+        var sub_arr2 = []
+        var sub_arr3 = []
+        var sub_arr4 = []
+        var sub_arr5 = []
+        var sub_arr6 = []
+        var sub_arr7 = []
+
+
+        d3.map(company, function(d) {
+            if (d.Percentage >= 1.6 && d.Percentage <= 15) {
+                sub_arr1.push(d.Percentage)
+
+            } else if (d.Percentage >= 1.3 && d.Percentage < 1.6) {
+                sub_arr2.push(d.Percentage)
+
+            } else if (d.Percentage >= 1 && d.Percentage < 1.3) {
+                sub_arr3.push(d.Percentage)
+
+            } else if (d.Percentage >= 0.6 && d.Percentage < 1) {
+                sub_arr4.push(d.Percentage)
+
+            } else if (d.Percentage >= 0.3 && d.Percentage < 0.6) {
+                sub_arr5.push(d.Percentage)
+
+            } else if (d.Percentage >= 0.1 && d.Percentage < 0.3) {
+                sub_arr6.push(d.Percentage)
+
+            } else {
+                sub_arr7.push(d.Percentage)
+
+            }
+        })
+
+        var country_map = new Map();
+        var pct_array = []
+            // creating a map with key as continent name and values as start angle, 
+            //end angle and max percentage of each continent. To be used in the radial scale
+            //for the polar coordinates generation	
+        d3.map(country, function(d) {
+                country_map.set(d.Country.trim(), [parseFloat(d.Start_angle), parseFloat(d.End_angle), parseFloat(d.Max_perc), d.angle])
+            })
+            //this array is made for that there is an array of percentages that can be used below to generate radius 
+            //or percentage values were getting disturbed when they were sorted in the csv files outside
+        d3.map(company, function(d) {
+                pct_array.push(parseFloat(d.Percentage))
+            })
+            //sorting the array so that array maintains the order always despite of changes in the main csv file
+        pct_array.sort(d3.descending)
+
+        var inc = 0
+            //array created to store  begging and ending of levels of bubbles at which they will be placed.
+            //this is array is generated cutting sections of percentage values at varying length
+        var level_array = []
+        for (var i = 0; i < 100; i += inc) {
+            level_array.push(pct_array[i])
+            inc = inc + 5
+        }
+        console.log(pct_array)
+        var r_arr = [140]
+        var pad = 5
+        for (var i = 1; i < level_array.length; i++) {
+
+            //pushing values to radius array
+
+            r_arr.push(r_arr[i - 1] + size(level_array[i]) + size(level_array[i - 1]) + pad)
+
+        }
+        // r_arr.push(r_arr[i - 1] + (size(level_array[i - 1]) + pad) * 2)
+
+        //radial scale for polar coordinate generation gives an angle and radius for each bubble based on 
+        //max percentage value per continent,  start and the end angle.
+        var line = d3.radialLine()
+            //gives the angle of the polar coordinate
+            .angle(function(d) {
+                //here the cont_map.get gives key value pair of continent and its values
+                var cont_angle_max_pct_data = country_map.get(d.Country.trim());
+                //getting the values for values above 
+                var pad_angle = 0 * cont_angle_max_pct_data[3]
+                var cont_max_pct = parseFloat(cont_angle_max_pct_data[2]);
+                //multiplying by Math.PI/180 to convert degrees to radians
+                var cont_start_angle = parseFloat(cont_angle_max_pct_data[0] + pad_angle) * Math.PI / 180;
+                var cont_end_angle = parseFloat(cont_angle_max_pct_data[1] - pad_angle) * Math.PI / 180;
+                //using the arrays of ranges for scale band.
+                var sub_arr = sub_arr5;
+                var intPct = (d.Percentage)
+                if (intPct >= 1.6 && intPct <= 15) {
+                    sub_arr = sub_arr1;
+                } else if (intPct >= 1.3 && intPct < 1.6) {
+                    sub_arr = sub_arr2;
+                } else if (intPct >= 1 && intPct < 1.3) {
+                    sub_arr = sub_arr3;
+                } else if (intPct >= 0.6 && intPct < 1) {
+                    sub_arr = sub_arr4
+                } else if (intPct >= 0.3 && intPct < 0.6) {
+                    sub_arr = sub_arr5
+                } else if (intPct >= 0.1 && intPct < 0.3) {
+                    sub_arr = sub_arr6
+                } else {
+                    sub_arr = sub_arr7
+                }
+                //Scale band evenly distributes the range to the domain values.
+                //gives the same amount of area/value/range to the domain value to be mapped.
+                //here every value in the array will get equal values from the range
+                var continent_angle_scale_fn = d3.scaleBand()
+                    .domain(sub_arr) // band_map.get(d.Continent) );
+                    .range([cont_start_angle, cont_end_angle]);
+                //here for each percentage value that comes in gets checked as to which array or range it falls 
+                //into and gets mapped to the total angle of the continent.		
+                return continent_angle_scale_fn(intPct);
+            })
+            //this gives the radius of the polar coordinate		
+            .radius(function(d) {
+
+                //radius has been segregated based of ranges of percentage values.
+                //this is so that the bubble doesn't get clustered or stay in the closer
+                //radius vakues.
+                //for aesthetics purpose and to avoid overlaps
+                for (var i = 1; i < level_array.length; i++) {
+                    if (parseFloat(d.Percentage) >= level_array[i]) {
+                        //console.log(i)
+                        break;
+                    }
+                }
+                return r_arr[i - 1] + 60
+            })
+
+        //============================tooltip=============
+        //creates tooltip at the bottom , also picks style from above.
+        let tooltip = d3.select('body')
+            .append('div')
+            .attr('id', 'tooltip')
+            .style("position", "absolute")
+            .style('visibility', 'hidden')
+            .style('width', 100)
+            .style('height', 100)
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "1px")
+            .style("border-radius", "5px")
+            .style("padding", "10px")
+
+        var nodes = svg.append("g")
+            .selectAll("circle")
+            .data(company)
+            .enter()
+
+
+        //these are the circles behind every bubble. this takes all the values and mapping same
+        //as the bubbles.
+        var circles_bg = nodes
+            .append("circle")
+            .attr("fill", "white")
+            .attr("r", d => size(d.Percentage * 1.3))
+            .attr("transform", function(d) {
+                var coors = line([d]).slice(1).slice(0, -1);
+                return "translate(" + coors + ")"
+
+            })
+
+        //color scale for dotted circle along with every bubble
+        var color2 = d3.scaleOrdinal()
+            .domain([0, 6])
+            //.range(["LightSeaGreen", "DodgerBlue", "Indigo ", "Maroon", "DarkMagenta", "DarkGoldenRod"])
+            .range(["Brown", "Lime", "Crimson", "Black", "DarkTurquoise", "Salmon"])
+
+        //dotted circle around every bubble
+        var circles_bg = nodes
+            .append("circle")
+            .attr("fill", "none")
+            .attr("r", d => size(d.Percentage * 0.8))
+            //here the line gives the value of coors as an angle and radius
+            //the values of polar coordinate comes with notation which includes 
+            //alphabets such as 'M'(move to) etc. slice removes the same to clean the values
+            .attr("transform", function(d) {
+                var coors = line([d]).slice(1).slice(0, -1);
+                return "translate(" + coors + ")"
+
+            })
+            .attr("stroke", function(d) {
+                return color2(d.Country.trim())
+            })
+            .attr("stroke-width", 2.5)
+            .style("stroke-dasharray", ("2.5,5"))
+
+
+        //main bubbles
+        var circles_main = nodes
+            .append("circle")
+            .attr("fill",
+                function(d) {
+                    console.log(d.Category.trim(), color(d.Category.trim()))
+                    return color(d.Category.trim())
+                }
+            )
+            .attr("r", d => size(d.Percentage * 0.7))
+            //here the line gives the value of coors as an angle and radius
+            //the values of polar coordinate comes with notation which includes 
+            //alphabets such as 'M'(move to) etc. slice removes the same to clean the values
+            .attr("transform", function(d) {
+                var coors = line([d]).slice(1).slice(0, -1);
+                return "translate(" + coors + ")"
+
+            })
+            //mouse actions for tooltip
+            .on("mouseover", (d) => {
+                tooltip.transition()
+                    .style("visibility", "visible")
+
+                tooltip.text(d.R_Company + "," + d.Real_Percentage + "%" + "," + " " + d.Country)
+            })
+            .on("mousemove", function() {
+                //positioning the tooltip near the bubble 
+                return tooltip.style("top", (event.pageY - 2) + "px").style("left", (event.pageX - 2) + "px");
+            })
+            .on("mouseout", (item) => {
+                tooltip.transition()
+                    .style("visibility", "hidden")
+            })
+
+
+
+        //appending text to circle -company name- its doen twice so that first one gives a white background.
+        //font underneath has bigger size
+        var circle_text = nodes.append("text")
+            .attr("dy", d => size(parseFloat(d.Percentage)) + 1) //"1.2em")
+            //.attr("dx", "2em")
+            .text(d => d.Company.trim())
+            .attr('fill', 'black')
+            .attr('font-size', 17 /*d => size2(d.Percentage)*/ )
+            .attr("text-anchor", "middle")
+            .attr("font-family", function(d, i) {
+                return i < 5 ? "Arvo" : "Libre Baskerville";
+            })
+            .attr("transform", function(d) {
+                var coors = line([d]).slice(1).slice(0, -1);
+                return "translate(" + coors + ")" + "rotate(0)"
+
+            })
+            .attr("stroke", "white")
+            .attr("stroke-width", 4)
+            //text in the foreground in white
+        var circle_text = nodes.append("text")
+            .attr("dy", d => size(parseFloat(d.Percentage)) + 1) //"1.2em")
+            //.attr("dx", "2em")
+            .text(d => d.Company.trim())
+            .attr('fill', 'black')
+            .attr('font-size', 17 /*d => size2(d.Percentage)*/ )
+            .attr("text-anchor", "middle")
+            //.attr("font-family", "Sans-serif")
+            .attr("transform", function(d) {
+                var coors = line([d]).slice(1).slice(0, -1);
+                return "translate(" + coors + ")" + "rotate(0)"
+
+            })
+            .attr("font-family", function(d, i) {
+                return i < 5 ? "Arvo" : "Libre Baskerville";
+            })
+
+        ///////-------LEGEND-----///////////
+
+
+        //the bigger legend
+        var legend_scale = d3.scaleOrdinal()
+            .domain([1, 100])
+            .range([3, 1.5])
+        var yscale = d3.scaleLinear()
+            .domain([1, 100])
+            .range([20, 1180])
+
+        var nodes = svg2.selectAll("g")
+            .data(company)
+        var nodes_enter = nodes.enter()
+            .append("g")
+        var circle = nodes_enter.append("circle")
+            .attr("fill", function(d) {
+                return color(d.Country.trim())
+            })
+            .attr("r", d => (legend_scale(d.Count)))
+            .attr("cx", 10)
+            .attr("cy", d => (yscale(d.Count)))
+
+
+        nodes_enter.append('text')
+            .text(d => d.R_Company.trim())
+            .attr('fill', 'black')
+            .attr('font-size', 8)
+            .attr("text-anchor", "right")
+            .attr("font-family", "sans-serif")
+            .attr("dx", 16)
+            .attr('dy', d => (yscale(d.Count)))
+
+        //:screenshot --dpr 2 ---->to take screenshot on mozilla, type this in console.
+
+
+    }
+</script>
+
+</html>
