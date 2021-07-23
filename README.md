@@ -1,4 +1,6 @@
 # D3 Projects
+[Climate Risk Index](https://physicalpixel.github.io/D3/Draft_1.html)
+
 [FCC Project Bar Chart](https://physicalpixel.github.io/D3/FCC_Bar_chart.html)
 
 [FCC Project Scatter Plot](https://physicalpixel.github.io/D3/FCC_Scatter_Plot.html)
@@ -9,4 +11,4 @@
 
 [Curved Text Over Circle](https://physicalpixel.github.io/D3/Curved_Text_Path.html)
 
-[Curved Text Over Circle](https://physicalpixel.github.io/D3/Curved_Text_Path.html)
+
