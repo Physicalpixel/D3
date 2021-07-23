@@ -1,5 +1,5 @@
 # D3 Projects
-[Climate Risk Index](https://physicalpixel.github.io/D3/Draft_1.html)
+[Climate Risk Index](https://physicalpixel.github.io/D3/CRI.html)
 
 [FCC Project Bar Chart](https://physicalpixel.github.io/D3/FCC_Bar_chart.html)
 
