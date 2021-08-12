@@ -1,4 +1,6 @@
 # D3 Projects
+[USA_extreme_Temperatures](https://physicalpixel.github.io/D3/Work_hours_lost/index.html)
+
 [Top Emitting Companies](https://physicalpixel.github.io/D3/Final_Draft.html)
 
 [California Wildfire](https://physicalpixel.github.io/D3/california2.gif)
