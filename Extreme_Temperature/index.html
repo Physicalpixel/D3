@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <meta charset="utf-8" />
+
+
+</body>
 <style>
     .state-borders {
         fill: none;
@@ -12,159 +15,224 @@
     }
     
     polygon {
-        fill: CadetBlue
+        fill: red
+    }
+    
+    path.sample {
+        stroke: black;
+        stroke-width: 1px;
+        fill: red;
+        fill-opacity: .5;
+    }
+    
+    #tooltip {
+        margin-top: 20px;
+        color: #000000;
+        font-size: 14px;
     }
 </style>
+<div class="row align-items-center">
+    <div class="col-sm-2">
+        <p id="value-time"></p>
+    </div>
+    <div class="col-sm">
+        <div id="slider-time"></div>
+    </div>
+</div>
 
-<svg width="960" height="600"></svg>
+
+<svg width="1500" height="1700"></svg>
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="https://d3js.org/topojson.v2.min.js"></script>
+<script src="https://unpkg.com/d3-simple-slider"></script>
 <script>
     var svg = d3.select("body").select("svg")
 
     Promise.all([
-            d3.json("https://d3js.org/us-10m.v1.json"),
-            d3.csv("https://raw.githubusercontent.com/Physicalpixel/D3/main/Extreme_Temperature/extreme1.csv")
+            d3.json("states.geojson"),
+            d3.csv("extreme1.csv")
         ])
         .then(showData)
 
     function showData([data, temp]) {
 
+        let year_keys = d3.map(temp, d => d.year).keys()
+        let year = year_keys.sort(d3.ascending)
+
+        /* svg.append("rect")
+             .attr("x", 0)
+             .attr("y", 0)
+             .attr("width", 1500)
+             .attr("height", 1000)*/
+
         var projection = d3.geoMercator()
-        projection.center([-96, 40])
-            .scale(950)
+            //projection.center([-96, 40])
+            .scale(500)
 
         var path1 = d3.geoPath()
             .projection(projection);
         var path = d3.geoPath()
+            .projection(projection);
 
-
-
-        svg.append("g")
-            .attr("class", "states")
-            .selectAll("path")
-            .data(topojson.feature(data, data.objects.states).features)
-            .enter().append("path")
+        svg.selectAll("path")
+            .data(data.features)
+            .enter()
+            .append("path")
             .attr("d", d => path(d))
-            .attr("fill", "grey")
+            .attr("stroke", "#999")
+            .attr("width", 10)
+            .attr("height", 10)
+            .attr("fill", "#eee")
+            .attr("transform", "translate(1100, 650) rotate(0)")
             .style("opacity", 0.5)
 
-        svg.append("path")
-            .attr("class", "state-borders")
-            .attr("d", path(topojson.mesh(data, data.objects.states, function(a, b) {
-                return a !== b;
-            })));
-
-
-        let year_keys = d3.map(temp, d => d.year).keys()
-        let year = year_keys.sort(d3.ascending)
-        console.log(year_keys.sort(d3.ascending))
-
-        bb = [-101, 35];
-
-
-
-        let circ = svg.selectAll("circle")
+        svg.selectAll("polygon")
             .data(temp)
             .enter()
-            .append("circle")
-            .attr("cx", function(d) {
-                //console.log(parseFloat(d.Longitude))
-                return projection([+d.Longitude, +d.Latitude])[0]
+            .append("polygon")
+            .attr("points", function(d) {
+                var points = tempCoords(d)
+                    //console.log(points)
+                return points
             })
-            .attr("cy", d => projection([+d.Longitude, +d.Latitude])[1])
-            .attr("r", d => d.temp_anom)
-            .attr("fill", "red")
+            .attr("stroke", "red")
+            .attr("stroke-width", 0.2)
+            .attr("transform", "translate(1400, 850) rotate(0)")
             .style("opacity", 0)
 
 
-        var select = svg.append("foreignObject")
-            .attr("x", 800)
-            .attr("y", 35)
-            .attr("width", 100)
-            .attr("height", 100)
-            .append("xhtml:body")
-            .append("div")
-            .html("<button>Click Me</button>")
-            .on("click", change)
-
-        function change() {
-            svg
-                .selectAll("circle")
-                .data(temp)
-                .transition()
-                .delay(100)
-                .duration(8000)
-                .attr("cx", function(d) {
-                    //console.log(parseFloat(d.Longitude))
-                    return projection([+d.Longitude, +d.Latitude])[0]
-                })
-                .attr("cy", d => projection([+d.Longitude, +d.Latitude])[1])
-                .attr("r", d => d.temp_anom * 8)
-                .style("opacity", 0.5)
-
-
-        }
-        /* var sampleData = d3.range(1000).map(function(d) {
-            var datapoint = {};
-            datapoint.id = "Sample Feature " + d;
-            datapoint.type = "Feature";
-            datapoint.properties = {};
-            datapoint.geometry = {};
-            datapoint.geometry.type = "Polygon";
-            datapoint.geometry.coordinates = randomCoords();
-            return datapoint;
-        });
-
-        function randomCoords() {
-            var randX = (Math.random() * 350) - 175;
-            var randY = (Math.random() * 170) - 85;
+        function tempCoords(d) {
+            var cx = projection([+d.Longitude, +d.Latitude])[0]
+            var cy = projection([+d.Longitude, +d.Latitude])[1]
             return [
                 [
-                    [randX - 5, randY],
-                    [randX, randY - 5],
-                    [randX - 10, randY - 5],
-                    [randX - 5, randY]
+                    [cx + 1, cy],
+                    [cx, cy + 1],
+                    [cx + 2, cy + 1],
+                    [cx + 1, cy]
                 ]
-            ];
-        };*/
+            ]
+        }
+
+        svg.selectAll("text")
+            .data(temp.filter(function(d) {
+                return d.year == 1880
+            }))
+            .enter()
+            .append("text")
+            .text(d => d.year)
+            .style("fill", "grey")
+            .style("opacity", 0.4)
+            .attr("font-size", 200)
+            .attr("transform", "translate(500, 300) rotate(0)")
+
+        max = d3.max(temp, d => +d.temp_anom)
+        min = d3.min(temp, d => +d.temp_anom)
+        var scale;
+        //////////////////////////////////////////////////////////////////////////////  
+
+        var dataTime = d3.range(0, 140, 3).map(function(d) {
+            return new Date(1879 + d, 20, 4);
+        });
+        console.log
+
+        function tempCoords1(d) {
+
+            if (d.temp_anom >= -3 && d.temp_anom < 1) {
+
+                scale = d3.scaleLinear()
+                    .domain([-3, 1])
+                    .range([0.5, 1])
+            } else if (d.temp_anom >= 1 && d.temp_anom < 2) {
+
+                scale = d3.scaleLinear()
+                    .domain([1, 2])
+                    .range([5, 8])
+            } else if (d.temp_anom >= 2 && d.temp_anom < 3) {
+
+                scale = d3.scaleLinear()
+                    .domain([2, 3])
+                    .range([10, 19])
+            } else if (d.temp_anom >= 3 && d.temp_anom < 4) {
+
+                scale = d3.scaleLinear()
+                    .domain([3, 4])
+                    .range([30, 40])
+            } else if (d.temp_anom >= 4 && d.temp_anom < 8) {
+
+                scale = d3.scaleLinear()
+                    .domain([4, 8])
+                    .range([60, 80])
+            }
+            var cx = projection([+d.Longitude, +d.Latitude])[0]
+            var cy = projection([+d.Longitude, +d.Latitude])[1]
+            return [
+                [
+                    [cx + 2, cy - scale(+d.temp_anom)],
+                    [cx, cy + 1],
+                    [cx + 4, cy + 1],
+                    [cx + 2, cy - scale(+d.temp_anom)],
+                ]
+            ]
+        }
 
 
+        var sliderTime = d3
+            .sliderBottom()
+            .min(d3.min(dataTime))
+            .max(d3.max(dataTime))
+            .step(1000 * 60 * 60 * 24 * 365)
+            .width(1500)
+            .tickFormat(d3.timeFormat('%Y'))
+            .tickValues(dataTime)
+            .default(new Date(1880, 10, 3))
+            .on('onchange', val => {
+                var x = d3.timeFormat('%Y')(val)
+                console.log(x)
+                svg.selectAll("polygon")
+                    .style("opacity", 0)
+                svg.selectAll("polygon")
+                    .data(temp.filter(function(d) {
+                        return d.year <= x
+                    }))
+                    .attr("points", function(d) {
+                        var points = tempCoords1(d)
+                            //console.log(points)
+                        return points
+                    })
+                    .attr("stroke", "red")
+                    .attr("stroke-width", 0.2)
+                    .attr("transform", "translate(1100, 650) rotate(0)")
+                    .style("opacity", 0.3)
 
+                //d3.select('p#value-time').text(d3.timeFormat('%Y')(val))
+                svg.selectAll("text")
+                    .style("opacity", 0)
+                svg.selectAll("text")
+                    .data(x)
+                    .text(d => x)
+                    .style("fill", "grey")
+                    .style("opacity", 0.3)
+                    .attr("font-size", 200)
+                    .attr("transform", "translate(500, 300) rotate(0)")
 
+            });
 
-        /*  var x = d3.scaleLinear().range([0, 500]);
-          var y = d3.scaleLinear().range([500, 0]);
+        var gTime = d3
+            .select('div#slider-time')
+            .append('svg')
+            .attr('width', 2000)
+            .attr('height', 80)
+            .append('g')
+            .attr('transform', 'translate(100,30)');
 
-          x.domain([0, 50]);
-          y.domain([0, 50]);
+        gTime.call(sliderTime);
 
+        //var x = d3.timeFormat('%Y')(sliderTime.value())
 
-          var poly = [{
-              "x": 10,
-              "y": 50
-          }, {
-              "x": 20,
-              "y": 20
-          }, {
-              "x": 50,
-              "y": 10
-          }, {
-              "x": 30,
-              "y": 30
-          }];
+        d //3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
 
-
-          svg.selectAll("polygon")
-              .data([poly])
-              .enter().append("polygon")
-              .attr("points", function(d) {
-                  return d.map(function(d) {
-                      return [x(d.x), y(d.y)].join(",");
-                  }).join(" ");
-              });*/
-
-
+        ///////////////////////////////////////////////////////////////////////////////////
 
     }
 </script>
