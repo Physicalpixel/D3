@@ -49,7 +49,7 @@
     var svg = d3.select("body").select("svg")
 
     Promise.all([
-            d3.json("states.geojson"),
+            d3.json("https://raw.githubusercontent.com/Physicalpixel/D3/main/Extreme_Temperature/states.geojson"),
             d3.csv("extreme1.csv")
         ])
         .then(showData)
