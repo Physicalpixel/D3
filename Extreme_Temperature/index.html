@@ -50,7 +50,7 @@
 
     Promise.all([
             d3.json("https://raw.githubusercontent.com/Physicalpixel/D3/main/Extreme_Temperature/states.geojson"),
-            d3.csv("extreme1.csv")
+            d3.csv("https://raw.githubusercontent.com/Physicalpixel/D3/main/Extreme_Temperature/extreme1.csv")
         ])
         .then(showData)
 
