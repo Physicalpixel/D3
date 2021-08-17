@@ -97,7 +97,7 @@
             })
             .attr("stroke", "red")
             .attr("stroke-width", 0.2)
-            .attr("transform", "translate(1400, 850) rotate(0)")
+            .attr("transform", "translate(1100, 650) rotate(0)")
             .style("opacity", 0)
 
 
@@ -212,7 +212,20 @@
                             return 0.5
                         }
 
-                    });
+                    })
+
+                //d3.select('p#value-time').text(d3.timeFormat('%Y')(val))
+                svg.selectAll("text")
+                    .style("opacity", 0)
+                svg.selectAll("text")
+                    .data(x)
+                    .text(d => x)
+                    .style("fill", "grey")
+                    .style("opacity", 0.3)
+                    .attr("font-size", 200)
+                    .attr("transform", "translate(500, 300) rotate(0)")
+
+            });
 
         var gTime = d3
             .select('div#slider-time')
@@ -226,7 +239,7 @@
 
         //var x = d3.timeFormat('%Y')(sliderTime.value())
 
-        d //3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
+        //d3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
 
         ///////////////////////////////////////////////////////////////////////////////////
 
