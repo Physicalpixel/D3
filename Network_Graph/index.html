@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8" />
+
+<head>>
+</head>
+
+<body>
+    <svg id="viz" style="background-color : none"> </svg>
+
+    <script src="https://d3js.org/d3.v5.min.js "></script>
+    <link href="https://fonts.googleapis.com/css?family=Aldrich|Arima+Madurai|Arvo|Henny+Penny|Indie+Flower|Libre+Baskerville|Pirata+One|Poiret+One|Sancreek|Satisfy|Share+Tech+Mono|Smokum|Snowburst+One|Special+Elite" rel="stylesheet">
+
+</body>
+<style>
+    body {
+        font-family: sans-serif;
+        background-color: white;
+        height: 100%;
+        text-align: center;
+        color: darkgrey;
+    }
+</style>
+<script>
+    var width = 1920;
+    var height = 1000;
+    var startTime = performance.now();
+    var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    d3.json("silo3.json").then(function(graph) {
+
+        var data = graph["graph"]["elements"]
+        var node_id_index = {};
+        data["nodes"].map(function(d, i) {
+            node_id_index[d["data"]["id"]] = i;
+        })
+        var newlinks = data["links"].map(function(d) {
+            var link = d.data;
+            link["source"] = node_id_index[link["source"]]
+            link["target"] = node_id_index[link["target"]]
+            return link;
+        })
+
+        var graphLayout = d3.forceSimulation(data["nodes"])
+            .force("charge", d3.forceManyBody().strength(-200))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("x", d3.forceX(width / 2).strength(1))
+            .force("y", d3.forceY(height / 2).strength(1))
+            .force("link", d3.forceLink(newlinks).distance(5).strength(1))
+            .on("tick", ticked);
+
+        var adjlist = [];
+
+        newlinks.forEach(function(d) {
+            adjlist[d.source.index + "-" + d.target.index] = true;
+            adjlist[d.target.index + "-" + d.source.index] = true;
+        });
+
+        function neigh(a, b) {
+            return a == b || adjlist[a + "-" + b];
+        }
+        var svg = d3.select("#viz")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("transform", "translate(" + 0 + ", " + (-70) + ")")
+
+        var container = svg.append("g");
+        /* svg.append("rect")
+             .attr("x", 80)
+             .attr("y", 450)
+             .attr("width", 565)
+             .attr("height", 80)
+             .attr("fill", "#3C3C3C")
+             .attr("rx", "12px")
+             .attr("opacity", 0.5)*/
+
+        svg.append("text")
+            .text("Network Graph for Silos and Isolates")
+            .attr("dy", 500)
+            .attr("dx", 100)
+            .attr("fill", "3C3C3C")
+            .attr("font-size", "30px")
+            //.attr("font-weight", "bold")
+        svg.append("text")
+            .text("Hover over a node")
+            .attr("dy", 930)
+            .attr("dx", 1550)
+            .attr("fill", "red")
+            .attr("font-size", "20px")
+
+
+
+
+
+
+
+
+        svg.call(
+            d3.zoom()
+            .scaleExtent([.1, 4])
+            .on("zoom", function() {
+                container.attr("transform", d3.event.transform);
+            })
+        );
+
+        var link = container.append("g").attr("class", "links")
+            .selectAll("line")
+            .data(newlinks)
+            .enter()
+            .append("line")
+            .attr("stroke", "#aaa")
+            .attr("stroke-width", "1px")
+
+
+        var node = container.append("g").attr("class", "nodes")
+            .selectAll("g")
+            .data(data["nodes"])
+            .enter()
+            .append("circle")
+            .attr("r", width / (width - 1200))
+            .attr("fill", function(d) {
+                return color(d.group);
+            })
+            //.attr("transform", "translate(" + 200 + ", " + (-70) + ")")
+            // to prevent mouseover/drag capture
+
+        node.on("mouseover", focus).on("mouseout", unfocus);
+
+
+        function ticked() {
+            node.call(updateNode);
+            link.call(updateLink);
+            //labelLayout.alphaTarget(0.3).restart();
+        }
+
+        function focus(d) {
+            var index = d3.select(d3.event.target).datum().index;
+            node.style("opacity", function(o) {
+                return neigh(index, o.index) ? 1 : 0.1;
+            });
+
+            link.style("opacity", function(o) {
+                return o.source.index == index || o.target.index == index ? 1 : 0.1;
+            });
+        }
+
+        function unfocus() {
+
+            node.style("opacity", 1);
+            link.style("opacity", 1);
+        }
+
+        function updateLink(link) {
+
+            link.attr("x1", function(d) {
+                    return d.source.x + 250;
+                })
+                .attr("y1", function(d) {
+                    return d.source.y;
+                })
+                .attr("x2", function(d) {
+                    return d.target.x + 250;
+                })
+                .attr("y2", function(d) {
+                    return d.target.y;
+                })
+
+        }
+
+        function updateNode(node) {
+            node
+                .attr("transform", function(d) {
+                    return "translate(" + (d.x + 250) + "," + d.y + ")";
+                })
+
+        }
+        var endTime = performance.now();
+        console.log(`Call to doSomething took ${endTime - startTime} milliseconds`);
+    });
+</script>
+
+</html>
