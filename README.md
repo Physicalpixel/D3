@@ -1,5 +1,5 @@
 # D3 Projects
-[Network Graph for Silos and Isolates](https://physicalpixel.github.io/D3/Network_Graph)
+[Network Graph for Silos and Isolates](https://physicalpixel.github.io/D3/Network_Graph/index.html )
 
 [USA_Extreme_Temperatures](https://physicalpixel.github.io/D3/Extreme_Temperature/index.html)
 
