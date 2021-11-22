@@ -15,7 +15,7 @@
 <style>
     body {
         font-family: sans-serif;
-        background-color: white;
+        background-color: #1e293d;
         height: 100%;
         text-align: center;
         color: darkgrey;
@@ -65,35 +65,28 @@
             .attr("transform", "translate(" + 0 + ", " + (-70) + ")")
 
         var container = svg.append("g");
-        /* svg.append("rect")
-             .attr("x", 80)
-             .attr("y", 450)
-             .attr("width", 565)
-             .attr("height", 80)
-             .attr("fill", "#3C3C3C")
-             .attr("rx", "12px")
-             .attr("opacity", 0.5)*/
+        svg.append("rect")
+            .attr("x", 80)
+            .attr("y", 450)
+            .attr("width", 565)
+            .attr("height", 80)
+            .attr("fill", "#3C3C3C")
+            .attr("rx", "12px")
+            .attr("opacity", 0.5)
 
         svg.append("text")
             .text("Network Graph for Silos and Isolates")
             .attr("dy", 500)
             .attr("dx", 100)
-            .attr("fill", "3C3C3C")
+            .attr("fill", "white")
             .attr("font-size", "30px")
             //.attr("font-weight", "bold")
-        svg.append("text")
-            .text("Hover over a node")
-            .attr("dy", 930)
-            .attr("dx", 1550)
-            .attr("fill", "red")
-            .attr("font-size", "20px")
-
-
-
-
-
-
-
+            /*svg.append("text")
+                .text("Hover over a node")
+                .attr("dy", 930)
+                .attr("dx", 1550)
+                .attr("fill", "white")
+                .attr("font-size", "20px")*/
 
         svg.call(
             d3.zoom()
@@ -109,7 +102,8 @@
             .enter()
             .append("line")
             .attr("stroke", "#aaa")
-            .attr("stroke-width", "1px")
+            .attr("stroke-width", "0.5px")
+            //.attr("opacity", 0.5)
 
 
         var node = container.append("g").attr("class", "nodes")
@@ -118,9 +112,7 @@
             .enter()
             .append("circle")
             .attr("r", width / (width - 1200))
-            .attr("fill", function(d) {
-                return color(d.group);
-            })
+            .attr("fill", "white")
             //.attr("transform", "translate(" + 200 + ", " + (-70) + ")")
             // to prevent mouseover/drag capture
 
