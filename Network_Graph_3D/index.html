@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8" />
+
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+
+
+
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <!--  <script src="../../dist/3d-force-graph.js"></script>-->
+</head>
+
+<body>
+
+    <div id="3d-graph"></div>
+
+
+    <script>
+        const elem = document.getElementById('3d-graph');
+
+        const Graph = ForceGraph3D()(elem)
+            .jsonUrl('test.json')
+            //.nodeAutoColorBy('department')
+            .nodeColor(node => {
+                return 'white'
+            })
+            .linkColor("green")
+            //.linkAutoColorBy("black")
+            .nodeRelSize(10)
+            .backgroundColor("#1e293d")
+            //.nodeLabel(node => `${node.user}: ${node.description}`)
+            //.onNodeClick(node => window.open(`https://bl.ocks.org/${node.user}/${node.id}`, '_blank'));
+
+        Graph
+            .d3Force('link')
+            .distance(link => {
+                return 20;
+            })
+    </script>
+</body>
+
+</html>
